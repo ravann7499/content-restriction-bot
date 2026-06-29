@@ -6,7 +6,7 @@ from threading import Thread
 from flask import Flask
 from shared_client import start_client
 
-# Flask app for Render port binding
+# Flask app for Render
 app = Flask(__name__)
 
 @app.route("/")
@@ -32,9 +32,10 @@ async def load_and_run_plugins():
     for plugin in plugins:
         module = importlib.import_module(f"plugins.{plugin}")
 
-        if hasattr(module, f"run_{plugin}_plugin"):
+        func_name = f"run_{plugin}_plugin"
+        if hasattr(module, func_name):
             print(f"Running {plugin} plugin...")
-            await getattr(module, f"run_{plugin}_plugin")()
+            await getattr(module, func_name)()
 
 async def main():
     await load_and_run_plugins()
@@ -43,7 +44,7 @@ async def main():
         await asyncio.sleep(1)
 
 if __name__ == "__main__":
-    # Start Flask server for Render
+    # Start Flask server so Render detects an open port
     Thread(target=run_web, daemon=True).start()
 
     loop = asyncio.get_event_loop()
@@ -54,13 +55,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Shutting down...")
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
         sys.exit(1)
     finally:
-        try:
-            loop.close()
-        except Exception:
-            pass    finally:
         try:
             loop.close()
         except Exception:
